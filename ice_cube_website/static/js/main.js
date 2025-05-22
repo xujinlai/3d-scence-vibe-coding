@@ -10,24 +10,39 @@ renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.8);
 
 // Position the camera
 camera.position.z = 5;
-camera.position.y = 2; // Slightly elevate camera to look down a bit
+camera.position.y = 2;
 
 // Add lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+// Adjusted light intensity as envMap will contribute to lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Reduced intensity
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // Reduced intensity
 directionalLight.position.set(5, 10, 7.5);
 scene.add(directionalLight);
 
+// Load Environment Map
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+const envMapTexture = cubeTextureLoader.setPath('https://threejs.org/examples/textures/cube/Park2/')
+    .load([
+        'posx.jpg', 'negx.jpg',
+        'posy.jpg', 'negy.jpg',
+        'posz.jpg', 'negz.jpg'
+    ]);
+scene.environment = envMapTexture; // Apply envMap to the scene for overall reflections/lighting if needed by other materials
+
 // Create ice-like material
 const iceMaterial = new THREE.MeshPhongMaterial({
-    color: 0xadd8e6,    // Light blue
-    transparent: true,  // Ensure transparency is enabled
-    opacity: 0.6,       // Adjusted opacity
+    color: 0xffffff,          // Set to white to let envMap dominate
+    envMap: envMapTexture,
+    mapping: THREE.CubeRefractionMapping,
+    refractionRatio: 0.76, // Closer to actual air-to-ice (1/1.309)
+    reflectivity: 0.9,
+    transparent: true,
+    opacity: 0.65,             // Slightly adjusted opacity
     shininess: 120,
-    specular: 0x444444,
-    depthWrite: false   // Key for better transparency with other objects
+    specular: 0x666666,        // Slightly increased specular for highlights
+    depthWrite: false
 });
 
 // Create cube geometries
@@ -40,7 +55,7 @@ const cubePositions = [-2.5, 0, 2.5];
 for (let i = 0; i < 3; i++) {
     const cube = new THREE.Mesh(cubeGeometry, iceMaterial);
     cube.position.x = cubePositions[i];
-    cube.position.y = 0; // Cubes at y=0
+    cube.position.y = 0;
     scene.add(cube);
     cubes.push(cube);
 }
@@ -51,17 +66,17 @@ const textureLoader = new THREE.TextureLoader();
 const gridTexture = textureLoader.load('https://threejs.org/examples/textures/grid.png');
 gridTexture.wrapS = THREE.RepeatWrapping;
 gridTexture.wrapT = THREE.RepeatWrapping;
-gridTexture.repeat.set(planeSize / 2, planeSize / 2); // Adjust texture repeat based on plane size
+gridTexture.repeat.set(planeSize / 2, planeSize / 2);
 
 const planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize);
 const planeMaterial = new THREE.MeshBasicMaterial({
     map: gridTexture,
-    side: THREE.DoubleSide // Render both sides of the plane
+    side: THREE.DoubleSide
 });
 
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.rotation.x = -Math.PI / 2; // Rotate plane to be horizontal
-plane.position.y = -1.5;         // Position plane below the cubes
+plane.rotation.x = -Math.PI / 2;
+plane.position.y = -1.5;
 scene.add(plane);
 
 // Initialize OrbitControls
@@ -69,8 +84,8 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.minDistance = 2;
-controls.maxDistance = 20; // Increased max distance to see more of the grid
-controls.target.set(0, 0, 0); // Ensure controls target the center of the cubes
+controls.maxDistance = 20;
+controls.target.set(0, 0, 0);
 
 // Handle window resize
 window.addEventListener('resize', onWindowResize, false);
