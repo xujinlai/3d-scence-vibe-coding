@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Cube Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Ray-Traced Ice Cube Gallery</h1>
+
+    <div class="gallery-container">
+        {% for image in images %}
+        <div class="gallery-item">
+            <img src="{{ url_for('static', filename='images/' + image.filename) }}" alt="{{ image.title }}">
+            <h2>{{ image.title }}</h2>
+            <p>{{ image.description }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
